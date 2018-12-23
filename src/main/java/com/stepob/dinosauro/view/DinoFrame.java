@@ -9,9 +9,10 @@ import java.beans.PropertyChangeListener;
 
 public class DinoFrame extends JFrame implements PropertyChangeListener {
 
+    private ScrollCanvas scrollCanvas;
+
     public DinoFrame(String title) throws HeadlessException {
         super(title);
-
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
@@ -34,13 +35,19 @@ public class DinoFrame extends JFrame implements PropertyChangeListener {
     private JPanel getDinoPanel() {
         final JPanel dinoPanel = new JPanel(new BorderLayout());
 
-        final ScrollCanvas scrollCanvas = new ScrollCanvas(true);
+        scrollCanvas = new ScrollCanvas(true);
+
+        scrollCanvas.setFocusable(true);
+        scrollCanvas.requestFocus();
+
         dinoPanel.add(scrollCanvas, BorderLayout.CENTER);
 
         JButton upButton = new JButton("U");
         JButton downButton = new JButton("D");
         JButton leftButton = new JButton("L");
         JButton rightButton = new JButton("R");
+        JButton startButton = new JButton("Start");
+        JButton stopButton = new JButton("Stop");
 
         upButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -63,8 +70,20 @@ public class DinoFrame extends JFrame implements PropertyChangeListener {
             }
         });
 
+        startButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                Thread t = new Thread(scrollCanvas);
+                t.start();
+            }
+        });
 
-        JPanel southPanel = new JPanel(new GridLayout(3, 3));
+        stopButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                scrollCanvas.stop();
+            }
+        });
+
+        JPanel southPanel = new JPanel(new GridLayout(4, 3));
         southPanel.add(new JPanel());
         southPanel.add(upButton);
         southPanel.add(new JPanel());
@@ -73,6 +92,9 @@ public class DinoFrame extends JFrame implements PropertyChangeListener {
         southPanel.add(rightButton);
         southPanel.add(new JPanel());
         southPanel.add(downButton);
+        southPanel.add(new JPanel());
+        southPanel.add(startButton);
+        southPanel.add(stopButton);
         southPanel.add(new JPanel());
 
         dinoPanel.add(southPanel, BorderLayout.SOUTH);

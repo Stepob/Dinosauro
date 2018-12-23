@@ -3,43 +3,58 @@ package com.stepob.dinosauro.view;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-public class ScrollCanvas extends JPanel implements MouseListener {
+public class ScrollCanvas extends JPanel implements Runnable, MouseListener, KeyListener {
 
-    private BufferedImage img = null;
+    private static final long SLEEP_TIME = 1;
+    private boolean isScrolling = false;
 
-    private int imgX = 0;
-    private int imgY = 0;
+    private final static String BACKGROUND_FILE_NAME = "sand-background.jpg";
+    private final static String DINO_FILE_NAME = "dinosauro.jpg";
+
+    private BufferedImage backgroundImg = null;
+    private BufferedImage dinoImg = null;
+
+    private int backgroundImgX = 0;
+    private int backgroundImgY = 0;
+    private int dinoImgX = 50;
+    private int dinoImgY = 80;
 
     public ScrollCanvas(boolean isDoubleBuffered) {
         super(isDoubleBuffered);
         setPreferredSize(new Dimension(800, 600));
+        setSize(new Dimension(800, 600));
 
         addMouseListener(this);
+        addKeyListener(this);
 
-        loadImage();
+        backgroundImg = loadImage(BACKGROUND_FILE_NAME);
+        dinoImg = loadImage(DINO_FILE_NAME);
 
         revalidate();
         repaint();
     }
 
-    private void loadImage() {
+    private BufferedImage loadImage(String fileName) {
 
         ClassLoader classLoader = getClass().getClassLoader();
-        File imageFile = new File(classLoader.getResource("sand-background.jpg").getFile());
+        File imageFile = new File(classLoader.getResource(fileName).getFile());
 
-
+        BufferedImage img = null;
         try {
             img = ImageIO.read(imageFile);
         } catch (IOException e) {
             System.out.println("ERROR");
             e.printStackTrace();
         }
+        return img;
     }
 
     public void paintComponent(Graphics g) {
@@ -49,22 +64,61 @@ public class ScrollCanvas extends JPanel implements MouseListener {
 
         setBackground(Color.BLACK);
 
-        ((Graphics2D) g).drawImage(img,null, imgX, imgY );
+        g2.drawImage(backgroundImg, null, backgroundImgX, backgroundImgY);
+        g2.drawImage(backgroundImg, null, backgroundImgX + 800, backgroundImgY);
 
-        // disegno immagine
+        g2.drawImage(dinoImg, null, dinoImgX, 600 - dinoImgY);
 
     }
+
+    public void run() {
+
+        long beforeTime, timeDiff, sleep;
+
+        beforeTime = System.currentTimeMillis();
+
+        isScrolling = true;
+
+        while (isScrolling) {
+
+            imgLeft();
+
+            timeDiff = System.currentTimeMillis() - beforeTime;
+            sleep = SLEEP_TIME - timeDiff;
+
+            if (sleep < 0) {
+                sleep = 2;
+            }
+
+            try {
+                Thread.sleep(sleep);
+            } catch (InterruptedException e) {
+
+            }
+
+            beforeTime = System.currentTimeMillis();
+        }
+    }
+
+    public void stop() {
+        isScrolling = false;
+    }
+
 
     public void mouseClicked(MouseEvent e) {
         System.out.println("Mouse Clicked - X: " + e.getX() + ", Y: " + e.getY());
     }
 
     public void mousePressed(MouseEvent e) {
+
         System.out.println("Mouse Pressed");
+        dinoImgY = 160;
     }
 
     public void mouseReleased(MouseEvent e) {
+
         System.out.println("Mouse Released");
+        dinoImgY = 80;
     }
 
     public void mouseEntered(MouseEvent e) {
@@ -76,27 +130,43 @@ public class ScrollCanvas extends JPanel implements MouseListener {
     }
 
     public void imgUp() {
-        imgY--;
+        backgroundImgY--;
         revalidate();
         repaint();
     }
 
     public void imgDown() {
-        imgY++;
+        backgroundImgY++;
         revalidate();
         repaint();
     }
 
     public void imgLeft() {
-        imgX--;
+        backgroundImgX--;
+        backgroundImgX = backgroundImgX % 800;
         revalidate();
         repaint();
     }
 
     public void imgRight() {
-        imgX++;
+        backgroundImgX++;
         revalidate();
         repaint();
     }
 
+    public void keyTyped(KeyEvent e) {
+
+    }
+
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_A) {
+            dinoImgY = 160;
+        }
+    }
+
+    public void keyReleased(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_A) {
+            dinoImgY = 80;
+        }
+    }
 }
